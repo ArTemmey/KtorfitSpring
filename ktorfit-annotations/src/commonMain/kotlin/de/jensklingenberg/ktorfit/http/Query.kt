@@ -17,7 +17,11 @@ package de.jensklingenberg.ktorfit.http
  * =====
  * [value] is the key of the query parameter
  * null values are ignored
- * @param encoded true means that this value is already URL encoded and will not be encoded again
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)
-annotation class Query(val value: String, val encoded: Boolean = false)
+expect annotation class Query(
+    val value: String,
+    val name: String = "",
+    val required: Boolean = true,
+    val defaultValue: String = "\n\t\t\n\t\t\n\uE000\uE001\uE002\n\t\t\t\t\n"
+)

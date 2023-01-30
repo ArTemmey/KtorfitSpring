@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "de.jensklingenberg.ktorfit"
-version = "1.0.0"
+version = "1.0.0-LOCAL"
 
 
 allprojects {
@@ -62,7 +62,7 @@ publishing {
     publications {
         create<MavenPublication>("default") {
             from(components["java"])
-            artifact(tasks["sourcesJar"])
+//            artifact(tasks["sourcesJar"])
             //artifact(tasks["dokkaJar"])
 
             pom {

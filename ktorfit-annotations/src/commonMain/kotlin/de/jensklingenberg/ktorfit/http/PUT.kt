@@ -2,7 +2,15 @@ package de.jensklingenberg.ktorfit.http
 
 
 /** Make a PUT request.
- * @param value relative url path, if empty, you need to have a parameter with [Url]
+ * @param name relative url path, if empty, you need to have a parameter with [Url]
  * */
 @Target(AnnotationTarget.FUNCTION)
-annotation class PUT(val value: String = "")
+expect annotation class PUT(
+    val name: String = "",
+    val value: Array<String> = [],
+    val path: Array<String> = [],
+    val params: Array<String> = [],
+    val headers: Array<String> = [],
+    val consumes: Array<String> = [],
+    val produces: Array<String> = []
+)

@@ -11,8 +11,8 @@ import de.jensklingenberg.ktorfit.model.annotations.*
 
 @OptIn(KspExperimental::class)
 fun KSValueParameter.getPathAnnotation(): Path? {
-    return this.getAnnotationsByType(de.jensklingenberg.ktorfit.http.Path::class).firstOrNull()?.let {
-        return Path(it.value, it.encoded)
+    return this.annotations.firstOrNull { it.shortName.asString() == "Path" || it.shortName.asString() == "PathVariable" }?.let {
+        return Path(it.getArgumentValueByName<String>("value").orEmpty(), false)
     }
 }
 
@@ -25,8 +25,8 @@ fun KSValueParameter.getHeadersAnnotation(): Header? {
 
 @OptIn(KspExperimental::class)
 fun KSValueParameter.getQueryAnnotation(): Query? {
-    return this.getAnnotationsByType(de.jensklingenberg.ktorfit.http.Query::class).firstOrNull()?.let {
-        return Query(it.value, it.encoded)
+    return this.annotations.firstOrNull { it.shortName.asString() == "Query" || it.shortName.asString() == "RequestParam" }?.let {
+        return Query(it.getArgumentValueByName<String>("value").orEmpty(), false)
     }
 }
 

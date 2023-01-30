@@ -15,11 +15,11 @@ interface KtorSamplesApi {
 
     val test1: String
 
-    @POST("signup")
+    @POST(name = "signup")
     suspend fun sendReg(@Body param: Parameters): String
 
     //client-submit-form
-    @POST("signup")
+    @POST(name = "signup")
     @FormUrlEncoded
     suspend fun signup(
         @Field("username") username: String?,
@@ -30,7 +30,7 @@ interface KtorSamplesApi {
 
 
     //client-submit-form
-    @POST("signup")
+    @POST(name = "signup")
     @FormUrlEncoded
     suspend fun signup(
         @FieldMap fieldMap: Map<String, String>?,
@@ -38,9 +38,9 @@ interface KtorSamplesApi {
     ): String
 
     @Multipart
-    @POST("upload")
+    @POST(name = "upload")
     suspend fun uploadFile(@Part("description") description: String, @Part("") file: List<PartData>): String
 
-    @POST("upload")
+    @POST(name = "upload")
     suspend fun upload(@Body map: MultiPartFormDataContent)
 }

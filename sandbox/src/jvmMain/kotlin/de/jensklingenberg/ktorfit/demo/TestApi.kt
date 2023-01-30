@@ -12,28 +12,28 @@ import kotlinx.coroutines.flow.Flow
 
 interface TestApi  {
 
-    @GET("pos4ts")
+    @GET(name = "pos4ts")
     fun getPosts(): Call<List<Post>>
 
-    @GET("posts/{userId}")
+    @GET(name = "posts/{userId}")
     suspend fun getPost(@Path("userId") myUserId: Int = 4): Post
 
-    @POST("posts")
+    @POST(name = "posts")
     suspend fun postPost(@Body otherID: Post): Post
 
-    @GET("posts/{userId}")
+    @GET(name = "posts/{userId}")
     suspend fun getPostsByUserId(@Path("userId") myUserId: Int): List<Post>
 
     @Headers(value = ["Accept: application/json"])
-    @GET("posts")
+    @GET(name = "posts")
     fun getFlowPosts(): Flow<List<Post>>
 
 
-    @POST("upload")
+    @POST(name = "upload")
     suspend fun uppi(@Body map: MultiPartFormDataContent)
 
     @Headers(value = ["Accept: application/json"])
-    @GET("posts")
+    @GET(name = "posts")
     fun getObserPosts(): Observable<List<Post>>
 
 

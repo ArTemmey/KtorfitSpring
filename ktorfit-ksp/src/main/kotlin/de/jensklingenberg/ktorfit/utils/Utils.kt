@@ -39,8 +39,8 @@ fun KSFunctionDeclaration.getMultipartAnnotation(): Multipart? {
 }
 
 @OptIn(KspExperimental::class)
-fun KSFunctionDeclaration.parseHTTPMethodAnno(name: String): HttpMethodAnnotation? {
-    return when (val annotation = this.getAnnotationByName(name)) {
+fun KSFunctionDeclaration.parseHTTPMethodAnno(name: String, altName: String? = null): HttpMethodAnnotation? {
+    return when (val annotation = this.getAnnotationByName(name, altName)) {
         null -> {
             null
         }
@@ -53,7 +53,9 @@ fun KSFunctionDeclaration.parseHTTPMethodAnno(name: String): HttpMethodAnnotatio
                 }
 
             } else {
-                val value = annotation.getArgumentValueByName<String>("value") ?: ""
+                val value = annotation.getArgumentValueByName<String>("name")
+                    ?: annotation.getArgumentValueByName<String>("value")
+                    ?: ""
                 HttpMethodAnnotation(value, HttpMethod.valueOf(name))
             }
 
@@ -61,8 +63,8 @@ fun KSFunctionDeclaration.parseHTTPMethodAnno(name: String): HttpMethodAnnotatio
     }
 }
 
-fun KSFunctionDeclaration.getAnnotationByName(name: String): KSAnnotation? {
-    return this.annotations.toList().firstOrNull { it.shortName.asString() == name }
+fun KSFunctionDeclaration.getAnnotationByName(name: String, altName: String? = null): KSAnnotation? {
+    return this.annotations.toList().firstOrNull { it.shortName.asString() == name || it.shortName.asString() == altName }
 }
 
 fun <T> KSAnnotation.getArgumentValueByName(name: String): T? {

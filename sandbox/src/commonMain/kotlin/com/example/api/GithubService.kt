@@ -18,10 +18,10 @@ interface GithubService {
         "Authorization: token ghp_abcdefgh",
         "Content-Type: application/json"
     )
-    @POST("repos/foso/experimental/issues")
+    @POST(name = "repos/foso/experimental/issues")
     suspend fun createIssue(@Body body: Issuedata, @Header("Acci") headi: String?): String
 
-    @POST("repos/foso/experimental/issues")
+    @POST(name = "repos/foso/experimental/issues")
     suspend fun createIssue2(@Body body: Issuedata, @Header("Acci") headi: String?): Call<Map<String?, Int>>
 
 
@@ -30,7 +30,7 @@ interface GithubService {
         "Authorization: token ghp_abcdefgh",
         "Content-Type: application/json"
     )
-    @GET("user/followers")
+    @GET(name = "user/followers")
     fun getFollowers(): Flow<List<GithubFollowerResponseItem>>
 
     @Headers(
@@ -38,7 +38,7 @@ interface GithubService {
         "Authorization: token ghp_abcdefgh",
         "Content-Type: application/json"
     )
-    @GET("repos/{owner}/{repo}/commits")
+    @GET(name = "repos/{owner}/{repo}/commits")
     fun listCommits(@Path("owner") owner: String, @Path("repo") repo: String): Flow<List<TestReeeItem>>
 
 }

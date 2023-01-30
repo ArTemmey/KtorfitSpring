@@ -47,13 +47,18 @@ public class KtorfitProcessor(private val env: SymbolProcessorEnvironment) : Sym
      * Returns a list of all [KSFunctionDeclaration] which are annotated with a Http Method Annotation
      */
     private fun getAnnotatedFunctions(resolver: Resolver): List<KSFunctionDeclaration> {
-        val getAnnotated = resolver.getSymbolsWithAnnotation(GET::class.java.name).toList()
-        val postAnnotated = resolver.getSymbolsWithAnnotation(POST::class.java.name).toList()
-        val putAnnotated = resolver.getSymbolsWithAnnotation(PUT::class.java.name).toList()
-        val deleteAnnotated = resolver.getSymbolsWithAnnotation(DELETE::class.java.name).toList()
+        val getAnnotated = (resolver.getSymbolsWithAnnotation("de.jensklingenberg.ktorfit.http.GET") +
+                resolver.getSymbolsWithAnnotation("org.springframework.web.bind.annotation.GetMapping")).toList()
+        val postAnnotated = (resolver.getSymbolsWithAnnotation("de.jensklingenberg.ktorfit.http.POST") +
+                resolver.getSymbolsWithAnnotation("org.springframework.web.bind.annotation.PostMapping")).toList()
+        val putAnnotated = (resolver.getSymbolsWithAnnotation("de.jensklingenberg.ktorfit.http.PUT") +
+                resolver.getSymbolsWithAnnotation("org.springframework.web.bind.annotation.PutMapping")).toList()
+        val deleteAnnotated = (resolver.getSymbolsWithAnnotation("de.jensklingenberg.ktorfit.http.DELETE") +
+                resolver.getSymbolsWithAnnotation("org.springframework.web.bind.annotation.DeleteMapping")).toList()
         val headAnnotated = resolver.getSymbolsWithAnnotation(HEAD::class.java.name).toList()
         val optionsAnnotated = resolver.getSymbolsWithAnnotation(OPTIONS::class.java.name).toList()
-        val patchAnnotated = resolver.getSymbolsWithAnnotation(PATCH::class.java.name).toList()
+        val patchAnnotated = (resolver.getSymbolsWithAnnotation("de.jensklingenberg.ktorfit.http.PATCH") +
+                resolver.getSymbolsWithAnnotation("org.springframework.web.bind.annotation.PatchMapping")).toList()
         val httpAnnotated = resolver.getSymbolsWithAnnotation(HTTP::class.java.name).toList()
 
         val ksAnnotatedList =

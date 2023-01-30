@@ -107,13 +107,13 @@ data class FunctionData(
  * @return list of [HttpMethodAnnotation]
  */
 fun getHttpMethodAnnotations(ksFunctionDeclaration: KSFunctionDeclaration): List<HttpMethodAnnotation> {
-    val getAnno = ksFunctionDeclaration.parseHTTPMethodAnno("GET")
-    val putAnno = ksFunctionDeclaration.parseHTTPMethodAnno("PUT")
-    val postAnno = ksFunctionDeclaration.parseHTTPMethodAnno("POST")
-    val deleteAnno = ksFunctionDeclaration.parseHTTPMethodAnno("DELETE")
+    val getAnno = ksFunctionDeclaration.parseHTTPMethodAnno("GET", "GetMapping")
+    val putAnno = ksFunctionDeclaration.parseHTTPMethodAnno("PUT", "PutMapping")
+    val postAnno = ksFunctionDeclaration.parseHTTPMethodAnno("POST", "PostMapping")
+    val deleteAnno = ksFunctionDeclaration.parseHTTPMethodAnno("DELETE", "DeleteMapping")
     val headAnno = ksFunctionDeclaration.parseHTTPMethodAnno("HEAD")
     val optionsAnno = ksFunctionDeclaration.parseHTTPMethodAnno("OPTIONS")
-    val patchAnno = ksFunctionDeclaration.parseHTTPMethodAnno("PATCH")
+    val patchAnno = ksFunctionDeclaration.parseHTTPMethodAnno("PATCH", "PatchMapping")
     val httpAnno = ksFunctionDeclaration.parseHTTPMethodAnno("HTTP")
 
     return listOfNotNull(getAnno, postAnno, putAnno, deleteAnno, headAnno, optionsAnno, patchAnno, httpAnno)

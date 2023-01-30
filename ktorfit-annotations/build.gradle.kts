@@ -6,7 +6,9 @@ plugins {
     id("org.jetbrains.dokka")
     id("com.android.library")
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.12.1"
-
+//    id("org.springframework.boot")
+//    id("io.spring.dependency-management")
+//    kotlin("plugin.spring")
 }
 
 java {
@@ -54,9 +56,30 @@ kotlin {
     }
     sourceSets {
         val commonMain by getting
-        val linuxX64Main by getting
+        val nativeMain by creating {
+            dependsOn(commonMain)
+        }
+        val linuxX64Main by getting {
+            dependsOn(nativeMain)
+        }
+        val mingwX64Main by getting {
+            dependsOn(nativeMain)
+        }
+        val macosX64Main by getting {
+            dependsOn(nativeMain)
+        }
+        val watchosX64Main by getting {
+            dependsOn(nativeMain)
+        }
+        val watchosArm64Main by getting {
+            dependsOn(nativeMain)
+        }
         val androidMain by getting
-        val jvmMain by getting
+        val jvmMain by getting {
+            dependencies {
+                api("org.springframework.boot:spring-boot-starter-web:3.0.2")
+            }
+        }
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
