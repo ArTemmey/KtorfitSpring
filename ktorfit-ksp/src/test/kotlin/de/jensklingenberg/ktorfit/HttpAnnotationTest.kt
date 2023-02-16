@@ -26,29 +26,26 @@ import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.`internal`.KtorfitService
 import de.jensklingenberg.ktorfit.`internal`.*
 import de.jensklingenberg.ktorfit.http.GET
+import io.ktor.util.reflect.*
 import kotlin.OptIn
-import kotlin.Unit
 
 @OptIn(InternalKtorfitApi::class)
 public class _TestServiceImpl : TestService, KtorfitService {
-  private lateinit var client: KtorfitClient
+  public override lateinit var ktorfitClient: Client
 
   public override suspend fun test(): String {
     val requestData = RequestData(method="GET",
         relativeUrl="user",
-        returnTypeData=TypeData("kotlin.String")) 
+        returnTypeData = TypeData("kotlin.String"),
+        requestTypeInfo=typeInfo<String>(),
+        returnTypeInfo = typeInfo<String>()) 
 
-    return client.suspendRequest<String, String>(requestData)!!
-  }
-
-  public override fun setClient(client: KtorfitClient): Unit {
-    this.client = client
+    return ktorfitClient.suspendRequest<String, String>(requestData)!!
   }
 }
 
 @OptIn(InternalKtorfitApi::class)
-public fun Ktorfit.createTestService(): TestService = _TestServiceImpl().also{
-    it.setClient(KtorfitClient(this)) }
+public fun Ktorfit.createTestService(): TestService = this.create(_TestServiceImpl())
 """
 
         val source = SourceFile.kotlin(
@@ -104,9 +101,11 @@ interface TestService {
         val expectedFunctionText = """public override suspend fun test(): String {
     val requestData = RequestData(method="",
         relativeUrl="user",
-        returnTypeData=TypeData("kotlin.String")) 
+        returnTypeData = TypeData("kotlin.String"),
+        requestTypeInfo=typeInfo<String>(),
+        returnTypeInfo = typeInfo<String>()) 
 
-    return client.suspendRequest<String, String>(requestData)!!
+    return ktorfitClient.suspendRequest<String, String>(requestData)!!
   }"""
 
         val compilation = KotlinCompilation().apply {
@@ -149,9 +148,11 @@ interface TestService {
     val requestData = RequestData(method="GET",
         relativeUrl="user",
         bodyData = body,
-        returnTypeData=TypeData("kotlin.String")) 
+        returnTypeData = TypeData("kotlin.String"),
+        requestTypeInfo=typeInfo<String>(),
+        returnTypeInfo = typeInfo<String>()) 
 
-    return client.suspendRequest<String, String>(requestData)!!
+    return ktorfitClient.suspendRequest<String, String>(requestData)!!
   }"""
 
         val compilation = KotlinCompilation().apply {

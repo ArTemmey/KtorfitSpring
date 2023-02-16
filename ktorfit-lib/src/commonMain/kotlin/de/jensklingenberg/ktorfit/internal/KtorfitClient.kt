@@ -1,6 +1,7 @@
 package de.jensklingenberg.ktorfit.internal
 
 import de.jensklingenberg.ktorfit.Ktorfit
+import io.ktor.client.*
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -16,9 +17,9 @@ import io.ktor.util.reflect.*
  * Please don't use the class directly
  */
 @InternalKtorfitApi
-class KtorfitClient(val ktorfit: Ktorfit) {
+internal class KtorfitClient(override val ktorfit: Ktorfit) : Client {
 
-    val httpClient = ktorfit.httpClient
+    public val httpClient: HttpClient = ktorfit.httpClient
 
     /**
      * Converts [value] to an URL encoded value
@@ -31,7 +32,7 @@ class KtorfitClient(val ktorfit: Ktorfit) {
     /**
      * This will handle all requests for functions without suspend modifier
      */
-    inline fun <reified ReturnType, reified RequestType : Any?> request(
+    public override fun <ReturnType, RequestType : Any?> request(
         requestData: RequestData
     ): ReturnType? {
 
@@ -45,7 +46,7 @@ class KtorfitClient(val ktorfit: Ktorfit) {
                 requestFunction = {
                     try {
                         val data = suspendRequest<HttpResponse, HttpResponse>(requestData)
-                        Pair(typeInfo<RequestType?>(), data)
+                        Pair(requestData.requestTypeInfo, data)
                     } catch (ex: Exception) {
                         throw ex
                     }
@@ -67,11 +68,12 @@ class KtorfitClient(val ktorfit: Ktorfit) {
      * This will handle all requests for functions with suspend modifier
      * Used by generated Code
      */
-    suspend inline fun <reified ReturnType, reified PRequest : Any?> suspendRequest(
+    public override suspend fun <ReturnType, PRequest : Any?> suspendRequest(
         requestData: RequestData
     ): ReturnType? {
         try {
-            if (ReturnType::class == HttpStatement::class) {
+
+            if (requestData.returnTypeData.instanceOf(HttpStatement::class)) {
                 return httpClient.prepareRequest {
                     requestBuilder(requestData)
                 } as ReturnType
@@ -79,7 +81,7 @@ class KtorfitClient(val ktorfit: Ktorfit) {
             val response = httpClient.request {
                 requestBuilder(requestData)
             }
-            if (ReturnType::class == HttpResponse::class) {
+            if (requestData.returnTypeData.instanceOf(HttpResponse::class)) {
                 return response as ReturnType
             }
 
@@ -91,12 +93,12 @@ class KtorfitClient(val ktorfit: Ktorfit) {
                 return it.wrapSuspendResponse<PRequest>(
                     typeData = requestData.returnTypeData,
                     requestFunction = {
-                        Pair(typeInfo<PRequest>(), response)
+                        Pair(requestData.requestTypeInfo, response)
                     }, ktorfit
                 ) as ReturnType
             }
 
-            return response.body<ReturnType>()
+            return response.body(requestData.returnTypeInfo)
 
         } catch (exception: Exception) {
             val typeIsNullable = requestData.returnTypeData.qualifiedName.endsWith("?")
@@ -108,7 +110,7 @@ class KtorfitClient(val ktorfit: Ktorfit) {
         }
     }
 
-    fun HttpRequestBuilder.requestBuilder(
+    private fun HttpRequestBuilder.requestBuilder(
         requestData: RequestData
     ) {
 
@@ -118,8 +120,8 @@ class KtorfitClient(val ktorfit: Ktorfit) {
         this.method = HttpMethod.parse(requestData.method)
 
         handleBody(requestData.bodyData)
-        handleQueries(requestData)
-        val queryNameUrl = handleQueryNames(requestData)
+        handleQueries(requestData.queries)
+        val queryNameUrl = handleQueryNames(requestData.queries)
 
         val relativeUrl = getRelativeUrl(requestData.paths, requestData.relativeUrl)
 
@@ -153,14 +155,14 @@ class KtorfitClient(val ktorfit: Ktorfit) {
      * with their corresponding value
      * @return the relative URL with replaced values
      */
-    private fun getRelativeUrl(paths: List<PathData>, relativeUrl: String): String {
+    private fun getRelativeUrl(paths: List<DH>, relativeUrl: String): String {
         var newUrl = relativeUrl
         paths.forEach {
 
             val newPathValue = if (it.encoded) {
-                it.value
+                it.data.toString()
             } else {
-                encode(it.value)
+                encode(it.data.toString())
             }
 
             newUrl = newUrl.replace("{${it.key}}", newPathValue)
@@ -169,10 +171,10 @@ class KtorfitClient(val ktorfit: Ktorfit) {
         return newUrl
     }
 
-    private fun HttpRequestBuilder.handleHeaders(headers: List<HeaderData>) {
+    private fun HttpRequestBuilder.handleHeaders(headers: List<DH>) {
         headers {
             headers.forEach {
-                when (val data = it.value) {
+                when (val data = it.data) {
                     is List<*> -> {
                         data.filterNotNull().forEach { dataEntry ->
                             append(it.key, dataEntry.toString())
@@ -196,14 +198,14 @@ class KtorfitClient(val ktorfit: Ktorfit) {
                     }
 
                     else -> {
-                        append(it.key, it.value.toString())
+                        append(it.key, it.data.toString())
                     }
                 }
             }
         }
     }
 
-    private fun HttpRequestBuilder.handleFields(fields: List<FieldData>) {
+    private fun HttpRequestBuilder.handleFields(fields: List<DH>) {
         if (fields.isNotEmpty()) {
             val formParameters = Parameters.build {
 
@@ -223,7 +225,7 @@ class KtorfitClient(val ktorfit: Ktorfit) {
                     }
                 }
 
-                fields.filter { it.type == FieldType.FIELD }.forEach { entry ->
+                fields.forEach { entry ->
 
                     when (val data = entry.data) {
                         is List<*> -> {
@@ -238,6 +240,14 @@ class KtorfitClient(val ktorfit: Ktorfit) {
                             }
                         }
 
+                        is Map<*,*> ->{
+                            for ((key, value) in entry.data as Map<*, *>) {
+                                value?.let {
+                                    append(entry.encoded, key.toString(), value.toString())
+                                }
+                            }
+                        }
+
                         null -> {
                             //Ignore this
                         }
@@ -247,22 +257,14 @@ class KtorfitClient(val ktorfit: Ktorfit) {
                         }
                     }
                 }
-
-                fields.filter { it.type == FieldType.FIELDMAP }.forEach { entry ->
-                    for ((key, value) in entry.data as Map<*, *>) {
-                        value?.let {
-                            append(entry.encoded, key.toString(), value.toString())
-                        }
-                    }
-                }
             }
             setBody(FormDataContent(formParameters))
 
         }
     }
 
-    private fun HttpRequestBuilder.handleQueries(requestData: RequestData) {
-        requestData.queries.filter { it.type == QueryType.QUERY }.forEach { entry ->
+    private fun HttpRequestBuilder.handleQueries(queries: List<DH>) {
+        queries.filter { it.type == "QueryType.QUERY" || it.type == "QueryType.QUERYMAP" }.forEach { entry ->
 
             when (val data = entry.data) {
                 is List<*> -> {
@@ -277,6 +279,15 @@ class KtorfitClient(val ktorfit: Ktorfit) {
                     }
                 }
 
+                is Map<*,*> ->{
+                    for ((key, value) in entry.data as Map<*, *>) {
+                        value?.let {
+                            setParameter(entry.encoded, key.toString(), value.toString())
+                        }
+
+                    }
+                }
+
                 null -> {
                     //Ignore this query
                 }
@@ -287,15 +298,6 @@ class KtorfitClient(val ktorfit: Ktorfit) {
             }
         }
 
-        requestData.queries.filter { it.type == QueryType.QUERYMAP }.forEach { entry ->
-            for ((key, value) in entry.data as Map<*, *>) {
-                value?.let {
-                    setParameter(entry.encoded, key.toString(), value.toString())
-                }
-
-            }
-        }
-
     }
 
     /**
@@ -303,9 +305,9 @@ class KtorfitClient(val ktorfit: Ktorfit) {
      * QueryNames will be handled special because otherwise Ktor always adds a "=" behind every
      * query e.g. QueryName("Hello") will be sent by Ktor like "?Hello="
      */
-    private fun handleQueryNames(requestData: RequestData): String {
+    private fun handleQueryNames(queries: List<DH>): String {
         val queryNames = mutableListOf<String>()
-        requestData.queries.filter { it.type == QueryType.QUERYNAME }.forEach { entry ->
+        queries.filter { it.type == "QueryType.QUERYNAME" }.forEach { entry ->
             when (val data = entry.data) {
                 is List<*> -> {
                     data.filterNotNull().forEach { dataEntry ->
@@ -382,7 +384,7 @@ class KtorfitClient(val ktorfit: Ktorfit) {
 
 
     private fun HttpRequestBuilder.encodedParameter(key: String, value: Any): Unit =
-        value.let { url.encodedParameters.append(key, it.toString()) } ?: Unit
+        value.let { url.encodedParameters.append(key, it.toString()) }
 
 }
 

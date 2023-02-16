@@ -1,20 +1,19 @@
 import de.jensklingenberg.ktorfit.Ktorfit
-import de.jensklingenberg.ktorfit.internal.HeaderData
-import de.jensklingenberg.ktorfit.internal.KtorfitClient
-import de.jensklingenberg.ktorfit.internal.RequestData
-import de.jensklingenberg.ktorfit.internal.TypeData
+import de.jensklingenberg.ktorfit.internal.*
 import io.ktor.client.*
 import io.ktor.client.request.*
+import io.ktor.util.reflect.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Test
 
+@OptIn(InternalKtorfitApi::class)
 class HeaderTest {
 
     @Test
     fun testHeaderWithString() {
 
-        val engine = object : TestEngine(){
+        val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
                 Assert.assertTrue(data.headers["Content-Type"] == "application/json")
             }
@@ -23,16 +22,20 @@ class HeaderTest {
         val ktorfit = Ktorfit.Builder().baseUrl("http://www.test.de/").httpClient(HttpClient(engine)).build()
         runBlocking {
             val requestData = RequestData(
-                method = "GET", relativeUrl = "", returnTypeData = TypeData("kotlin.String"), headers = listOf(HeaderData("Content-Type","application/json"))
+                method = "GET",
+                relativeUrl = "",
+                returnTypeData = TypeData("kotlin.String"),
+                headers = listOf(DH("Content-Type", "application/json")),
+                requestTypeInfo = typeInfo<String>(), returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 
     @Test
     fun ignoreHeaderWithNullValue() {
 
-        val engine = object : TestEngine(){
+        val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
                 Assert.assertTrue(data.headers["Content-Type"] == null)
             }
@@ -41,9 +44,13 @@ class HeaderTest {
         val ktorfit = Ktorfit.Builder().baseUrl("http://www.test.de/").httpClient(HttpClient(engine)).build()
         runBlocking {
             val requestData = RequestData(
-                method = "GET", relativeUrl = "", returnTypeData = TypeData("kotlin.String"), headers = listOf(HeaderData("Content-Type",null))
+                method = "GET",
+                relativeUrl = "",
+                returnTypeData = TypeData("kotlin.String"),
+                headers = listOf(DH("Content-Type", null)),
+                requestTypeInfo = typeInfo<String>(), returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 
@@ -54,21 +61,25 @@ class HeaderTest {
          * null values are ignored
          */
 
-        val testList = listOf("foo",null,"bar")
+        val testList = listOf("foo", null, "bar")
 
-        val engine = object : TestEngine(){
+        val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
                 val acceptHeaderData = data.headers.getAll("Accept")
-                Assert.assertTrue( acceptHeaderData == testList.filterNotNull() )
+                Assert.assertTrue(acceptHeaderData == testList.filterNotNull())
             }
         }
 
         val ktorfit = Ktorfit.Builder().baseUrl("http://www.test.de/").httpClient(HttpClient(engine)).build()
         runBlocking {
             val requestData = RequestData(
-                method = "GET", relativeUrl = "", returnTypeData = TypeData("kotlin.String"), headers = listOf(HeaderData("Accept",testList))
+                method = "GET",
+                relativeUrl = "",
+                returnTypeData = TypeData("kotlin.String"),
+                headers = listOf(DH("Accept", testList)),
+                requestTypeInfo = typeInfo<String>(), returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 
@@ -79,21 +90,25 @@ class HeaderTest {
          * null values are ignored
          */
 
-        val testList = arrayOf("foo",null,"bar")
+        val testList = arrayOf("foo", null, "bar")
 
-        val engine = object : TestEngine(){
+        val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
                 val acceptHeaderData = data.headers.getAll("Accept")
-                Assert.assertTrue( acceptHeaderData == testList.filterNotNull() )
+                Assert.assertTrue(acceptHeaderData == testList.filterNotNull())
             }
         }
 
         val ktorfit = Ktorfit.Builder().baseUrl("http://www.test.de/").httpClient(HttpClient(engine)).build()
         runBlocking {
             val requestData = RequestData(
-                method = "GET", relativeUrl = "", returnTypeData = TypeData("kotlin.String"), headers = listOf(HeaderData("Accept",testList))
+                method = "GET",
+                relativeUrl = "",
+                returnTypeData = TypeData("kotlin.String"),
+                headers = listOf(DH("Accept", testList)),
+                requestTypeInfo = typeInfo<String>(), returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 
@@ -103,12 +118,12 @@ class HeaderTest {
          * A Header Map should result in a Header for every entry of the map
          */
 
-        val testMap = mapOf("foo" to "bar","fizz" to "buzz")
+        val testMap = mapOf("foo" to "bar", "fizz" to "buzz")
 
-        val engine = object : TestEngine(){
+        val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
                 testMap.forEach {
-                    Assert.assertTrue( data.headers[it.key] == it.value )
+                    Assert.assertTrue(data.headers[it.key] == it.value)
                 }
             }
         }
@@ -116,9 +131,14 @@ class HeaderTest {
         val ktorfit = Ktorfit.Builder().baseUrl("http://www.test.de/").httpClient(HttpClient(engine)).build()
         runBlocking {
             val requestData = RequestData(
-                method = "GET", relativeUrl = "", returnTypeData = TypeData("kotlin.String"), headers = listOf(HeaderData("",testMap))
+                method = "GET",
+                relativeUrl = "",
+                returnTypeData = TypeData("kotlin.String"),
+                headers = listOf(DH("", testMap)),
+                requestTypeInfo = typeInfo<String>(),
+                returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 

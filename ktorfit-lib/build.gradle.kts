@@ -21,12 +21,12 @@ detekt {
     config = files("../detekt-config.yml")
     buildUponDefaultConfig = false
 }
-val enableSigning: String by project
+val enableSigning = project.hasProperty("ORG_GRADLE_PROJECT_signingInMemoryKey")
 
 mavenPublishing {
     publishToMavenCentral()
     // publishToMavenCentral(SonatypeHost.S01) for publishing through s01.oss.sonatype.org
-    if(enableSigning.toBoolean()){
+    if(enableSigning){
         signAllPublications()
     }
 }
@@ -40,7 +40,7 @@ val ktorVersion: String by project
 version = ktorfitVersion
 
 kotlin {
-
+    explicitApi()
     android {
         publishLibraryVariants("release", "debug")
     }
@@ -209,5 +209,5 @@ publishing {
 }
 
 rootProject.plugins.withType(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin::class){
-    rootProject.the(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension::class).nodeVersion = "16.0.0"
+    rootProject.the(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension::class).nodeVersion = "18.0.0"
 }

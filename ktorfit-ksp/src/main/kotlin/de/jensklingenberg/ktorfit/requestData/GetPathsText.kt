@@ -1,6 +1,5 @@
 package de.jensklingenberg.ktorfit.requestData
 
-import de.jensklingenberg.ktorfit.model.pathDataClass
 import de.jensklingenberg.ktorfit.model.ParameterData
 import de.jensklingenberg.ktorfit.model.annotations.Path
 import de.jensklingenberg.ktorfit.utils.surroundIfNotEmpty
@@ -15,7 +14,7 @@ fun getPathsText(params: List<ParameterData>): String {
         val pathPath = pathAnnotation?.value ?: ""
         val pathEncoded = pathAnnotation?.encoded ?: false
 
-        "${pathDataClass.name}(\"$pathPath\",\"\$$paramName\",$pathEncoded)"
+        "DH(\"$pathPath\",\"\$$paramName\",$pathEncoded)"
     }.joinToString { it }
 
     return pathData.surroundIfNotEmpty("paths = listOf(", ")")

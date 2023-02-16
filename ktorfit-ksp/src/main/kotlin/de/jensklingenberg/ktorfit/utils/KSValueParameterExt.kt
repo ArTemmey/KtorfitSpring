@@ -2,11 +2,8 @@ package de.jensklingenberg.ktorfit.utils
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.ksp.toClassName
 import de.jensklingenberg.ktorfit.model.annotations.*
 
 @OptIn(KspExperimental::class)
@@ -70,7 +67,7 @@ fun KSValueParameter.getPartMapAnnotation(): PartMap? {
 @OptIn(KspExperimental::class)
 fun KSValueParameter.getRequestBuilderAnnotation(): RequestBuilder? {
     return this.getAnnotationsByType(de.jensklingenberg.ktorfit.http.ReqBuilder::class).firstOrNull()?.let {
-        return RequestBuilder()
+        return RequestBuilder
     }
 }
 
@@ -86,25 +83,25 @@ fun KSValueParameter.getQueryMapAnnotation(): QueryMap? {
 @OptIn(KspExperimental::class)
 fun KSValueParameter.getHeaderMapAnnotation(): HeaderMap? {
     return this.getAnnotationsByType(de.jensklingenberg.ktorfit.http.HeaderMap::class).firstOrNull()?.let {
-        return HeaderMap()
+        return HeaderMap
     }
 }
 
 @OptIn(KspExperimental::class)
 fun KSValueParameter.getUrlAnnotation(): Url? {
     return this.getAnnotationsByType(de.jensklingenberg.ktorfit.http.Url::class).firstOrNull()?.let {
-        return Url()
+        return Url
     }
 }
 
 @OptIn(KspExperimental::class)
 fun KSValueParameter.getBodyAnnotation(): Body? {
     return this.annotations.firstOrNull { it.shortName.asString() == "Body" || it.shortName.asString() == "RequestBody" }?.let {
-        return Body()
+        return Body
     }
 }
 
-fun KSAnnotated.getRequestTypeAnnotations(): ClassName? {
+fun KSValueParameter.getRequestTypeAnnotation(): RequestType? {
     val requestTypeClazz = de.jensklingenberg.ktorfit.http.RequestType::class
     val filteredAnnotations = this.annotations.filter {
         it.shortName.getShortName() == requestTypeClazz.simpleName
@@ -112,7 +109,7 @@ fun KSAnnotated.getRequestTypeAnnotations(): ClassName? {
     }
     return filteredAnnotations.mapNotNull {
         it.arguments.map { arg ->
-            (arg.value as KSType).toClassName()
+            RequestType((arg.value as KSType))
         }.firstOrNull()
     }.firstOrNull()
 }

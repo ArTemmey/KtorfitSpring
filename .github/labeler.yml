@@ -1,0 +1,24 @@
+build:
+  - "**/*.gradle"
+  - "**/*.gradle.kts"
+
+ci:
+  - ".github/*"
+  
+compiler-plugin:
+  - "compiler-plugin/src/**/*"
+  
+documentation:
+  - "docs/*.md"
+
+gradle-plugin:
+  - "gradle-plugin/src/**/*"
+  
+ktorfit-ksp:
+  - "ktorfit-ksp/src/**/*"  
+
+ktorfit-lib:
+  - "ktorfit-lib/src/**/*"  
+
+sandbox:
+  - "sandbox/src/**/*"  

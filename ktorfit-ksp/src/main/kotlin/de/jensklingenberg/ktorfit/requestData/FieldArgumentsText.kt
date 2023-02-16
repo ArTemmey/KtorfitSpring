@@ -12,33 +12,31 @@ import de.jensklingenberg.ktorfit.utils.surroundWith
  */
 
 fun getFieldArgumentsText(params: List<ParameterData>): String {
-    //Get all Parameter with @Field and add them to a map
+    //Get all Parameter with @Field and add them to a list
 
     val fieldDataStringList = mutableListOf<String>()
 
     val fieldDataList = params.filter { it.hasAnnotation<Field>() }.map { parameterData ->
-        val query = parameterData.annotations.filterIsInstance<Field>().first()
-        val encoded = query.encoded
+        val field = parameterData.annotations.filterIsInstance<Field>().first()
+        val encoded = field.encoded
         val data = parameterData.name
-        val queryKey = query.value.surroundWith("\"")
-        val type = "FieldType.FIELD"
+        val fieldKey = field.value.surroundWith("\"")
 
-        "FieldData($queryKey,$data,$encoded,$type)"
+        "$fieldKey,$data,$encoded"
     }
 
     fieldDataStringList.addAll(fieldDataList)
 
     val fieldMapStrings = params.filter { it.hasAnnotation<FieldMap>() }.map { parameterData ->
-        val queryMap = parameterData.findAnnotationOrNull<FieldMap>()!!
-        val encoded = queryMap.encoded
+        val fieldMap = parameterData.findAnnotationOrNull<FieldMap>()!!
+        val encoded = fieldMap.encoded
         val data = parameterData.name
         val keyName = "\"\""
-        val type = "FieldType.FIELDMAP"
 
-        "FieldData($keyName,$data,$encoded,$type)"
+        "$keyName,$data,$encoded"
     }
 
     fieldDataStringList.addAll(fieldMapStrings)
 
-    return fieldDataStringList.joinToString { it }.surroundIfNotEmpty("fields = listOf(", ")")
+    return fieldDataStringList.joinToString { "DH($it)" }.surroundIfNotEmpty("fields = listOf(", ")")
 }

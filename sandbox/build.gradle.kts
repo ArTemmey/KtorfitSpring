@@ -5,7 +5,7 @@ plugins {
 }
 apply(plugin = "de.jensklingenberg.ktorfit")
 version = "1.0-SNAPSHOT"
-val ktorVersion = "2.2.2"
+val ktorVersion = "2.2.3"
 configure<de.jensklingenberg.ktorfit.gradle.KtorfitGradleConfiguration> {
     enabled = true
 }
@@ -59,7 +59,7 @@ kotlin {
             dependencies {
                 implementation("io.ktor:ktor-client-core-native:1.3.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-                implementation("io.ktor:ktor-client-curl:2.1.2")
+                implementation("io.ktor:ktor-client-curl:2.2.3")
 
             }
         }
@@ -74,7 +74,7 @@ kotlin {
                 implementation("io.reactivex.rxjava3:rxjava:3.1.5")
 
                 implementation("io.ktor:ktor-client-logging:$ktorVersion")
-                implementation("ch.qos.logback:logback-classic:1.4.3")
+                implementation("ch.qos.logback:logback-classic:1.4.5")
                 implementation("io.ktor:ktor-serialization-gson:$ktorVersion")
 
             }
@@ -116,15 +116,14 @@ kotlin {
 dependencies {
 
     add(
-        "kspCommonMainMetadata",
-        project(":ktorfit-ksp")
+        "kspCommonMainMetadata", projects.ktorfitKsp
     )
-    add("kspJvm", project(":ktorfit-ksp"))
-    add("kspIosX64", project(":ktorfit-ksp"))
+    add("kspJvm", projects.ktorfitKsp)
+    add("kspIosX64", projects.ktorfitKsp)
 
-   // add("kspJvmTest", project(":ktorfit-ksp"))
-    add("kspJs", project(":ktorfit-ksp"))
-    add("kspLinuxX64", project(":ktorfit-ksp"))
-    add("kspMingwX64", project(":ktorfit-ksp"))
+   // add("kspJvmTest", projects.ktorfitKsp)
+    add("kspJs",projects.ktorfitKsp)
+    add("kspLinuxX64", projects.ktorfitKsp)
+    add("kspMingwX64", projects.ktorfitKsp)
 
 }

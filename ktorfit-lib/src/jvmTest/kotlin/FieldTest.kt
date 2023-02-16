@@ -3,6 +3,7 @@ import de.jensklingenberg.ktorfit.internal.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.util.reflect.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -19,7 +20,7 @@ class FieldTest {
 
         val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
-                assertTrue( (data.body as FormDataContent).formData[testKey] == encodedTestValue)
+                assertTrue((data.body as FormDataContent).formData[testKey] == encodedTestValue)
             }
         }
 
@@ -28,10 +29,12 @@ class FieldTest {
             val requestData = RequestData(
                 method = "GET",
                 relativeUrl = "",
-                returnTypeData = TypeData( "kotlin.String"),
-                fields = listOf(FieldData(testKey, testValue, false, FieldType.FIELD)),
+                returnTypeData = TypeData("kotlin.String"),
+                fields = listOf(DH(testKey, testValue, false)),
+                requestTypeInfo = typeInfo<String>(),
+                returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 
@@ -43,7 +46,7 @@ class FieldTest {
         val expected = testValue
         val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
-                assertTrue( (data.body as FormDataContent).formData[testKey] == expected)
+                assertTrue((data.body as FormDataContent).formData[testKey] == expected)
             }
         }
 
@@ -53,9 +56,11 @@ class FieldTest {
                 method = "GET",
                 relativeUrl = "",
                 returnTypeData = TypeData("kotlin.String"),
-                fields = listOf(FieldData(testKey, testValue, true, FieldType.FIELD)),
+                fields = listOf(DH(testKey, testValue, true)),
+                requestTypeInfo = typeInfo<String>(),
+                returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 
@@ -68,7 +73,7 @@ class FieldTest {
 
         val engine = object : TestEngine() {
             override fun getRequestData(data: HttpRequestData) {
-                assertTrue( (data.body as FormDataContent).formData[testKey] == null)
+                assertTrue((data.body as FormDataContent).formData[testKey] == null)
             }
         }
 
@@ -77,10 +82,12 @@ class FieldTest {
             val requestData = RequestData(
                 method = "GET",
                 relativeUrl = "",
-                returnTypeData = TypeData( "kotlin.String"),
-                fields = listOf(FieldData(testKey, testValue, false, FieldType.FIELD)),
+                returnTypeData = TypeData("kotlin.String"),
+                fields = listOf(DH(testKey, testValue, false)),
+                requestTypeInfo = typeInfo<String>(),
+                returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 
@@ -103,9 +110,11 @@ class FieldTest {
                 method = "POST",
                 relativeUrl = "",
                 returnTypeData = TypeData("kotlin.String"),
-                fields = listOf(FieldData(testKey, testMap, false, FieldType.FIELDMAP))
+                fields = listOf(DH(testKey, testMap, false)),
+                requestTypeInfo = typeInfo<String>(),
+                returnTypeInfo = typeInfo<String>()
             )
-            KtorfitClient(ktorfit).suspendRequest<String,String>(requestData)
+            KtorfitClient(ktorfit).suspendRequest<String, String>(requestData)
         }
     }
 

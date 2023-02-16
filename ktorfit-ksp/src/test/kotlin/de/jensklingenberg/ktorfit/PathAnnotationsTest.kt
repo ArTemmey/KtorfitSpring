@@ -36,10 +36,12 @@ interface TestService {
         val expectedFunctionText = """public override suspend fun test(id: String): String {
     val requestData = RequestData(method="GET",
         relativeUrl="user/{id}",
-        returnTypeData=TypeData("kotlin.String"),
-        paths = listOf(PathData("id","äid",false))) 
+        returnTypeData = TypeData("kotlin.String"),
+        paths = listOf(DH("id","äid",false)),
+        requestTypeInfo=typeInfo<String>(),
+        returnTypeInfo = typeInfo<String>()) 
 
-    return client.suspendRequest<String, String>(requestData)!!
+    return ktorfitClient.suspendRequest<String, String>(requestData)!!
   }""".replace("\\{", "{").replace("ä","$")
 
         val compilation = KotlinCompilation().apply {
@@ -82,10 +84,12 @@ interface TestService {
         val expectedFunctionText = """public override suspend fun test(id: String): String {
     val requestData = RequestData(method="GET",
         relativeUrl="user/{id}",
-        returnTypeData=TypeData("kotlin.String"),
-        paths = listOf(PathData("id","äid",true))) 
+        returnTypeData = TypeData("kotlin.String"),
+        paths = listOf(DH("id","äid",true)),
+        requestTypeInfo=typeInfo<String>(),
+        returnTypeInfo = typeInfo<String>()) 
 
-    return client.suspendRequest<String, String>(requestData)!!
+    return ktorfitClient.suspendRequest<String, String>(requestData)!!
   }""".replace("%", "").replace("ä","$")
 
         val compilation = KotlinCompilation().apply {

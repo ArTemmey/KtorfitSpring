@@ -4,9 +4,12 @@ import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.toKModifier
+import com.squareup.kotlinpoet.ksp.toTypeName
+import de.jensklingenberg.ktorfit.model.annotations.RequestType
 import de.jensklingenberg.ktorfit.utils.addImports
 import de.jensklingenberg.ktorfit.utils.getFileImports
 import de.jensklingenberg.ktorfit.utils.resolveTypeName
@@ -22,7 +25,8 @@ data class ClassData(
     val imports: List<String>,
     val superClasses: List<String> = emptyList(),
     val properties: List<KSPropertyDeclaration> = emptyList(),
-    val modifiers: List<KModifier> = emptyList()
+    val modifiers: List<KModifier> = emptyList(),
+    val ksFile: KSFile
 )
 
 const val WILDCARDIMPORT = "WILDCARDIMPORT"
@@ -32,39 +36,18 @@ const val WILDCARDIMPORT = "WILDCARDIMPORT"
  */
 fun ClassData.getImplClassFileSource(): String {
     val classData = this
-
     val optinAnnotation = AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
         .addMember("InternalKtorfitApi::class")
         .build()
 
-    /**
-     * public fun Ktorfit.createExampleApi(): ExampleApi = _ExampleApiImpl(KtorfitClient(this)).also { it.setClient(KtorfitClient(this)) }
-     */
-    val createExtensionFunctionSpec = FunSpec.builder("create${classData.name}")
-        .addAnnotation(
-            optinAnnotation
-        )
-        .addModifiers(classData.modifiers)
-        .addStatement("return _${classData.name}Impl().also{ it.setClient(KtorfitClient(this)) }")
-        .receiver(TypeVariableName(ktorfitClass.name))
-        .returns(TypeVariableName(classData.name))
-        .build()
 
-    /**
-     * public override fun setClient(client: KtorfitClient): Unit {
-     *     this.client = client
-     *   }
-     */
-    val setClientFunction = FunSpec.builder("setClient")
-        .addModifiers(KModifier.OVERRIDE)
-        .addParameter("client", TypeVariableName(clientClass.name))
-        .addStatement("this.client = client")
-        .build()
+    val createExtensionFunctionSpec = getCreateExtensionFunctionSpec(classData, optinAnnotation)
+
 
     val properties = classData.properties.map { property ->
         val propBuilder = PropertySpec.builder(
             property.simpleName.asString(),
-            TypeVariableName(property.type.resolve().resolveTypeName())
+            property.type.toTypeName()
         )
             .addModifiers(KModifier.OVERRIDE)
             .mutable(property.isMutable)
@@ -77,7 +60,7 @@ fun ClassData.getImplClassFileSource(): String {
         if (property.isMutable) {
             propBuilder.setter(
                 FunSpec.setterBuilder()
-                    .addParameter("value", TypeVariableName(property.type.resolve().resolveTypeName()))
+                    .addParameter("value", property.type.toTypeName())
                     .build()
             )
         }
@@ -89,12 +72,13 @@ fun ClassData.getImplClassFileSource(): String {
 
     val clientProperty = PropertySpec
         .builder(
-            "client",
+            "ktorfitClient",
             TypeVariableName(clientClass.name),
-            listOf(KModifier.PRIVATE, KModifier.LATEINIT)
+            listOf(KModifier.OVERRIDE, KModifier.LATEINIT)
         )
         .mutable(true)
         .build()
+
 
     val implClassSpec = TypeSpec.classBuilder(implClassName)
         .addAnnotation(
@@ -102,10 +86,9 @@ fun ClassData.getImplClassFileSource(): String {
         )
         .addModifiers(classData.modifiers)
         .addSuperinterface(ClassName(classData.packageName, classData.name))
-        .addSuperinterface(ClassName("de.jensklingenberg.ktorfit.internal", "KtorfitService"))
+        .addSuperinterface(ktorfitServiceClassName)
         .addKtorfitSuperInterface(classData.superClasses)
         .addFunctions(classData.functions.map { it.toFunSpec() }.flatten())
-        .addFunction(setClientFunction)
         .addProperty(
             clientProperty
         )
@@ -117,8 +100,26 @@ fun ClassData.getImplClassFileSource(): String {
         .addImports(classData.imports)
         .addType(implClassSpec)
         .addFunction(createExtensionFunctionSpec)
-
         .build().toString().replace(WILDCARDIMPORT, "*")
+}
+
+/**
+ * public fun Ktorfit.createExampleApi(): ExampleApi = _ExampleApiImpl(KtorfitClient(this)).also { it.setClient(KtorfitClient(this)) }
+ */
+private fun getCreateExtensionFunctionSpec(
+    classData: ClassData,
+    optinAnnotation: AnnotationSpec
+): FunSpec {
+
+    return FunSpec.builder("create${classData.name}")
+        .addAnnotation(
+            optinAnnotation
+        )
+        .addModifiers(classData.modifiers)
+        .addStatement("return this.create(_${classData.name}Impl())")
+        .receiver(TypeVariableName(ktorfitClass.name))
+        .returns(TypeVariableName(classData.name))
+        .build()
 }
 
 
@@ -130,7 +131,9 @@ fun ClassData.getImplClassFileSource(): String {
  */
 fun KSClassDeclaration.toClassData(logger: KSPLogger): ClassData {
     val ksClassDeclaration = this
-    val imports = ksClassDeclaration.getFileImports().toMutableList()
+    val imports = ksClassDeclaration.getFileImports().toMutableList().also {
+        it.add("io.ktor.util.reflect.*")
+    }
     val packageName = ksClassDeclaration.packageName.asString()
     val className = ksClassDeclaration.simpleName.asString()
 
@@ -158,11 +161,11 @@ fun KSClassDeclaration.toClassData(logger: KSPLogger): ClassData {
         }
 
 
-    if (functionDataList.any { it.parameterDataList.any { param -> param.hasRequestTypeAnnotation() } }) {
+    if (functionDataList.any { it.parameterDataList.any { param -> param.hasAnnotation<RequestType>() } }) {
         imports.add("kotlin.reflect.cast")
     }
 
-    val supertypes =
+    val filteredSupertypes =
         ksClassDeclaration.superTypes.toList().filterNot {
             /** In KSP Any is a supertype of an interface */
             it.resolve().resolveTypeName() == "Any"
@@ -178,9 +181,15 @@ fun KSClassDeclaration.toClassData(logger: KSPLogger): ClassData {
         packageName = packageName,
         functions = functionDataList,
         imports = imports,
-        superClasses = supertypes,
+        superClasses = filteredSupertypes,
         properties = properties,
-        modifiers = ksClassDeclaration.modifiers.mapNotNull { it.toKModifier() })
+        modifiers = ksClassDeclaration.modifiers.mapNotNull { it.toKModifier() },
+        ksFile = this.getKsFile()
+    )
+}
+
+private fun KSClassDeclaration.getKsFile(): KSFile {
+    return this.containingFile ?: throw Error("Containing File for ${this.simpleName} was null")
 }
 
 /**

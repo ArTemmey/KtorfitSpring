@@ -27,8 +27,8 @@ interface TestService {
 
 
         val expectedBodyDataArgumentText =
-            """returnTypeData=TypeData("kotlin.collections.Map",listOf(TypeData("kotlin.String"),
-            TypeData("kotlin.Int"))))"""
+            """returnTypeData = TypeData("kotlin.collections.Map",listOf(TypeData("kotlin.String"),
+            TypeData("kotlin.Int")))"""
 
         val compilation = KotlinCompilation().apply {
             sources = listOf(source)

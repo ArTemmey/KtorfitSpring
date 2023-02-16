@@ -2,11 +2,7 @@ package de.jensklingenberg.ktorfit
 
 import KtorfitProcessorProvider
 import com.google.common.truth.Truth
-import com.tschuchort.compiletesting.KotlinCompilation
-import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.kspIncremental
-import com.tschuchort.compiletesting.kspSourcesDir
-import com.tschuchort.compiletesting.symbolProcessorProviders
+import com.tschuchort.compiletesting.*
 import de.jensklingenberg.ktorfit.model.KtorfitError
 import org.junit.Assert
 import org.junit.Test
@@ -17,15 +13,15 @@ class UrlTest {
 
     @Test
     fun testFunctionWithGET() {
-        val expectedFunctionSource = """
-  public override suspend fun test(): String {
+        val expectedFunctionSource = """public override suspend fun test(): String {
     val requestData = RequestData(method="GET",
         relativeUrl="user",
-        returnTypeData=TypeData("kotlin.String")) 
+        returnTypeData = TypeData("kotlin.String"),
+        requestTypeInfo=typeInfo<String>(),
+        returnTypeInfo = typeInfo<String>()) 
 
-    return client.suspendRequest<String, String>(requestData)!!
-  }
-"""
+    return ktorfitClient.suspendRequest<String, String>(requestData)!!
+  }"""
 
         val source = SourceFile.kotlin(
             "Source.kt", """
@@ -59,15 +55,16 @@ interface TestService {
 
     @Test
     fun testFunctionWithGETAndUrlAnno() {
-        val expectedFunctionSource = """
-  public override suspend fun test(url: String): String {
+        val expectedFunctionSource = """public override suspend fun test(url: String): String {
     val requestData = RequestData(method="GET",
         relativeUrl="$\{url}",
-        returnTypeData=TypeData("kotlin.String")) 
+        returnTypeData = TypeData("kotlin.String"),
+        requestTypeInfo=typeInfo<String>(),
+        returnTypeInfo = typeInfo<String>()) 
 
-    return client.suspendRequest<String, String>(requestData)!!
-  }
-""".replace("\\{", "{")
+    return ktorfitClient.suspendRequest<String, String>(requestData)!!
+  }""".replace("\\{", "{")
+
 
         val source = SourceFile.kotlin(
             "Source.kt", """
@@ -101,7 +98,7 @@ interface TestService {
     }
 
 
-    //Multipe
+    //Multiple
     @Test
     fun whenHttpMethodAnnotationPathEmptyAndNoUrlAnno_ThrowCompilationError() {
 
@@ -141,7 +138,7 @@ import de.jensklingenberg.ktorfit.http.Url
 
 interface TestService {
     @GET("")
-    suspend fun test(@Url url: String,@Url url2: String): String
+    suspend fun test(@Url url: String, @Url url2: String): String
 }
     """
         )

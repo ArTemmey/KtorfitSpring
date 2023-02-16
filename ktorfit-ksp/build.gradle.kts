@@ -24,12 +24,11 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-val enableSigning: String by project
-
+val enableSigning = project.hasProperty("ORG_GRADLE_PROJECT_signingInMemoryKey")
 mavenPublishing {
     publishToMavenCentral()
     // publishToMavenCentral(SonatypeHost.S01) for publishing through s01.oss.sonatype.org
-    if(enableSigning.toBoolean()){
+    if(enableSigning){
         signAllPublications()
     }
 }
@@ -38,18 +37,20 @@ group = "de.jensklingenberg.ktorfit"
 version = ktorfitVersion
 
 dependencies {
-    implementation(project(":ktorfit-annotations"))
+    implementation(projects.ktorfitAnnotations)
     implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
     implementation("com.squareup:kotlinpoet:$kotlinPoet")
     implementation("com.squareup:kotlinpoet-ksp:$kotlinPoet")
 
     compileOnly ("com.google.auto.service:auto-service:$autoService")
     kapt ("com.google.auto.service:auto-service:$autoService")
+
+    /* TEST  */
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.google.truth:truth:1.1.3")
     testImplementation("dev.zacsweers.kctfork:core:0.2.1")
     testImplementation("dev.zacsweers.kctfork:ksp:0.2.1")
-    testImplementation ("org.mockito.kotlin:mockito-kotlin:4.0.0")
+    testImplementation ("org.mockito.kotlin:mockito-kotlin:4.1.0")
 
 }
 
