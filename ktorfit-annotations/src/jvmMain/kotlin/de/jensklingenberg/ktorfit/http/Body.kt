@@ -1,5 +1,7 @@
 package de.jensklingenberg.ktorfit.http
 
+import org.springframework.web.bind.annotation.RequestBody
+
 /**
  *
  *
@@ -7,5 +9,4 @@ Use this to upload data in an HTTP Body
 @POST("createIssue")
 fun upload(@Body issue: Issue)
  */
-@Target(AnnotationTarget.VALUE_PARAMETER)
-expect annotation class Body
+actual typealias Body = RequestBody

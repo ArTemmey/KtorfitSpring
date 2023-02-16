@@ -8,4 +8,4 @@ Use this to upload data in an HTTP Body
 fun upload(@Body issue: Issue)
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)
-expect annotation class Body
+actual annotation class Body

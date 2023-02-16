@@ -99,7 +99,7 @@ fun KSValueParameter.getUrlAnnotation(): Url? {
 
 @OptIn(KspExperimental::class)
 fun KSValueParameter.getBodyAnnotation(): Body? {
-    return this.getAnnotationsByType(de.jensklingenberg.ktorfit.http.Body::class).firstOrNull()?.let {
+    return this.annotations.firstOrNull { it.shortName.asString() == "Body" || it.shortName.asString() == "RequestBody" }?.let {
         return Body()
     }
 }
